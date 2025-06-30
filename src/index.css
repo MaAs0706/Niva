@@ -1,0 +1,364 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-variation-settings: 'slnt' 0;
+  }
+
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+/* Custom animations */
+@keyframes gentle-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes warm-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+  }
+}
+
+.animate-gentle-pulse {
+  animation: gentle-pulse 3s ease-in-out infinite;
+}
+
+.animate-warm-glow {
+  animation: warm-glow 4s ease-in-out infinite;
+}
+
+/* Enhanced Custom slider styling for light mode */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 12px;
+  border-radius: 6px;
+}
+
+input[type="range"]::-webkit-slider-track {
+  background: linear-gradient(to right, #e9d5ff, #a5f3fc);
+  height: 12px;
+  border-radius: 6px;
+  border: none;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(135deg, #8b5cf6, #14b8a6);
+  height: 28px;
+  width: 28px;
+  border-radius: 50%;
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  margin-top: -8px;
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+
+input[type="range"]::-moz-range-track {
+  background: linear-gradient(to right, #e9d5ff, #a5f3fc);
+  height: 12px;
+  border-radius: 6px;
+  border: none;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+input[type="range"]::-moz-range-thumb {
+  background: linear-gradient(135deg, #8b5cf6, #14b8a6);
+  height: 28px;
+  width: 28px;
+  border-radius: 50%;
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.1);
+}
+
+/* Dark mode slider styling */
+.dark input[type="range"]::-webkit-slider-track {
+  background: linear-gradient(to right, #7c3aed, #0891b2);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.dark input[type="range"]::-webkit-slider-thumb {
+  background: linear-gradient(135deg, #8b5cf6, #14b8a6);
+  border: 4px solid #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dark input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.dark input[type="range"]::-moz-range-track {
+  background: linear-gradient(to right, #7c3aed, #0891b2);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.dark input[type="range"]::-moz-range-thumb {
+  background: linear-gradient(135deg, #8b5cf6, #14b8a6);
+  border: 4px solid #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Special styling for purple/pink sliders (check-in intervals) */
+input[type="range"].purple-slider::-webkit-slider-track {
+  background: linear-gradient(to right, #e9d5ff, #f3e8ff);
+}
+
+input[type="range"].purple-slider::-webkit-slider-thumb {
+  background: linear-gradient(135deg, #a855f7, #9333ea);
+}
+
+input[type="range"].purple-slider::-moz-range-track {
+  background: linear-gradient(to right, #e9d5ff, #f3e8ff);
+}
+
+input[type="range"].purple-slider::-moz-range-thumb {
+  background: linear-gradient(135deg, #a855f7, #9333ea);
+}
+
+.dark input[type="range"].purple-slider::-webkit-slider-track {
+  background: linear-gradient(to right, #7c3aed, #6d28d9);
+}
+
+.dark input[type="range"].purple-slider::-moz-range-track {
+  background: linear-gradient(to right, #7c3aed, #6d28d9);
+}
+
+/* Special styling for teal sliders (ping intervals) */
+input[type="range"].teal-slider::-webkit-slider-track {
+  background: linear-gradient(to right, #ccfbf1, #a7f3d0);
+}
+
+input[type="range"].teal-slider::-webkit-slider-thumb {
+  background: linear-gradient(135deg, #14b8a6, #0891b2);
+}
+
+input[type="range"].teal-slider::-moz-range-track {
+  background: linear-gradient(to right, #ccfbf1, #a7f3d0);
+}
+
+input[type="range"].teal-slider::-moz-range-thumb {
+  background: linear-gradient(135deg, #14b8a6, #0891b2);
+}
+
+.dark input[type="range"].teal-slider::-webkit-slider-track {
+  background: linear-gradient(to right, #0891b2, #0e7490);
+}
+
+.dark input[type="range"].teal-slider::-moz-range-track {
+  background: linear-gradient(to right, #0891b2, #0e7490);
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Custom scrollbar for light mode */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(200, 181, 230, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #8b5cf6, #14b8a6);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #7c3aed, #0891b2);
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #8b5cf6, #14b8a6);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #7c3aed, #0891b2);
+}
+
+/* Dark mode specific styles */
+.dark {
+  color-scheme: dark;
+}
+
+/* Enhanced dark mode background override */
+.dark {
+  background: linear-gradient(135deg, #1e1b2e 0%, #2d2a3d 25%, #3c394c 50%, #4b485b 75%, #5a576a 100%) !important;
+}
+
+/* Dark mode card backgrounds */
+.dark .bg-white\/90 {
+  background-color: rgba(30, 41, 59, 0.9) !important;
+}
+
+.dark .bg-white\/80 {
+  background-color: rgba(30, 41, 59, 0.8) !important;
+}
+
+.dark .bg-white\/70 {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+.dark .bg-white {
+  background-color: rgb(30, 41, 59) !important;
+}
+
+/* Dark mode borders */
+.dark .border-purple-100\/50 {
+  border-color: rgba(71, 85, 105, 0.5) !important;
+}
+
+.dark .border-orange-100\/50 {
+  border-color: rgba(71, 85, 105, 0.5) !important;
+}
+
+.dark .border-slate-100 {
+  border-color: rgb(71, 85, 105) !important;
+}
+
+/* Dark mode gradient backgrounds */
+.dark .from-purple-50 {
+  --tw-gradient-from: rgb(30, 27, 46) !important;
+}
+
+.dark .to-teal-50 {
+  --tw-gradient-to: rgb(30, 27, 46) !important;
+}
+
+.dark .via-purple-50\/30 {
+  --tw-gradient-via: rgba(30, 27, 46, 0.3) !important;
+}
+
+.dark .to-teal-50\/30 {
+  --tw-gradient-to: rgba(30, 27, 46, 0.3) !important;
+}
+
+/* Enhanced focus states for accessibility */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+.dark button:focus-visible,
+.dark input:focus-visible,
+.dark textarea:focus-visible {
+  outline-color: #a78bfa;
+}
+
+/* Smooth theme transition for all elements */
+*,
+*::before,
+*::after {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Focus ring for range sliders */
+input[type="range"]:focus {
+  outline: none;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+input[type="range"]:focus::-moz-range-thumb {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+/* Dark mode input styling */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: rgb(30, 41, 59) !important;
+  border-color: rgb(71, 85, 105) !important;
+  color: rgb(226, 232, 240) !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: rgb(139, 92, 246) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+}
+
+/* Dark mode placeholder text */
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: rgb(148, 163, 184) !important;
+}
+
+/* Dark mode button styling */
+.dark button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Ensure proper dark mode for all components */
+.dark * {
+  border-color: rgb(71, 85, 105);
+}
+
+.dark .text-slate-600 {
+  color: rgb(148, 163, 184) !important;
+}
+
+.dark .text-slate-700 {
+  color: rgb(203, 213, 225) !important;
+}
+
+.dark .text-slate-800 {
+  color: rgb(226, 232, 240) !important;
+}
+
+.dark .text-slate-900 {
+  color: rgb(241, 245, 249) !important;
+}
