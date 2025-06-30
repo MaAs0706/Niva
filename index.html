@@ -5,9 +5,38 @@
     <link rel="icon" type="image/png" href="/Niva Logo 1024x1024.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Niva - Your Safety Companion</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Your silent safety companion that keeps you connected and protected">
+    <meta name="theme-color" content="#8b5cf6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Niva">
+    <link rel="apple-touch-icon" href="/Niva Logo 1024x1024.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/Niva Logo 1024x1024.png" as="image">
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

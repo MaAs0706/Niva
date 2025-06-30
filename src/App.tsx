@@ -9,6 +9,7 @@ import SettingsPanel from './components/SettingsPanel';
 import LocationSharingTest from './components/LocationSharingTest';
 import LandingPage from './components/LandingPage';
 import OnboardingTour from './components/OnboardingTour';
+import InstallPrompt from './components/InstallPrompt';
 import { SessionProvider } from './contexts/SessionContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -195,6 +196,9 @@ const AppContent: React.FC = () => {
       <main className="max-w-md mx-auto">
         {renderView()}
       </main>
+
+      {/* Install Prompt */}
+      <InstallPrompt />
 
       {/* Bottom Navigation - Dark mode friendly */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-purple-100/50 dark:border-slate-700/50 shadow-2xl transition-colors duration-300">

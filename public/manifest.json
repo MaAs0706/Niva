@@ -1,0 +1,37 @@
+{
+  "name": "Niva - Your Safety Companion",
+  "short_name": "Niva",
+  "description": "Your silent safety companion that keeps you connected and protected",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#8b5cf6",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "categories": ["safety", "lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "/Niva Logo 1024x1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Niva Logo 1024x1024.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/Niva Logo 1024x1024.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/Niva Logo 1024x1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}
