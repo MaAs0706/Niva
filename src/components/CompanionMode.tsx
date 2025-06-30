@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { useSession } from '../contexts/SessionContext';
 import { useLocation } from '../contexts/LocationContext';
-import { shareLocationWithContacts, getUserDisplayName, sendEmergencyAlert } from '../utils/locationSharing';
+import { useNotifications } from '../contexts/NotificationContext';
+import { shareLocationWithContacts, getUserDisplayName, sendEmergencyAlert, sendCheckInAlert } from '../utils/locationSharing';
 import CameraRecorder from './CameraRecorder';
 
 interface CompanionModeProps {
@@ -30,6 +31,7 @@ interface CompanionModeProps {
 const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession }) => {
   const { session, updatePing, updateCheckIn } = useSession();
   const { currentLocation, shareLocation, startTracking, stopTracking, isTracking, error } = useLocation();
+  const { showLocationShared, showCheckInSent, showEmergencyAlert, showSessionEnded, showSafetyCheck } = useNotifications();
   
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [nextPing, setNextPing] = useState(0);
@@ -44,7 +46,7 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [isSessionExpired, setIsSessionExpired] = useState(false);
   const [safetyCheckCountdown, setSafetyCheckCountdown] = useState(0);
-  const [showSafetyCheck, setShowSafetyCheck] = useState(false);
+  const [showSafetyCheckPrompt, setShowSafetyCheckPrompt] = useState(false);
   const [smartIntervals, setSmartIntervals] = useState<{ ping: number; checkIn: number }>({ ping: 3, checkIn: 15 });
 
   // Calculate smart intervals based on session duration
@@ -147,7 +149,7 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
         remainingMinutes = Math.floor(remaining / 60);
 
         // Check if session has expired
-        if (remaining === 0 && !isSessionExpired && !showSafetyCheck) {
+        if (remaining === 0 && !isSessionExpired && !showSafetyCheckPrompt) {
           console.log('🛡️ SESSION DURATION EXPIRED');
           console.log('==============================');
           console.log('⏰ Session time has ended. Initiating safety check...');
@@ -155,8 +157,9 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
           console.log('==============================');
           
           setIsSessionExpired(true);
-          setShowSafetyCheck(true);
+          setShowSafetyCheckPrompt(true);
           setSafetyCheckCountdown(120); // 2 minutes
+          showSafetyCheck();
         }
       }
 
@@ -190,18 +193,18 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
       }
 
       // Check-in prompt
-      if (nextCheckInTime === 0 && !isCheckInPrompt && !showSafetyCheck) {
+      if (nextCheckInTime === 0 && !isCheckInPrompt && !showSafetyCheckPrompt) {
         setIsCheckInPrompt(true);
         setCheckInCountdown(180); // 3 minutes to respond
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, session, isCheckInPrompt, selectedRoute, sessionEndTime, isSessionExpired, showSafetyCheck, timeRemaining]);
+  }, [isActive, session, isCheckInPrompt, selectedRoute, sessionEndTime, isSessionExpired, showSafetyCheckPrompt, timeRemaining]);
 
   // Safety check countdown
   useEffect(() => {
-    if (showSafetyCheck && safetyCheckCountdown > 0) {
+    if (showSafetyCheckPrompt && safetyCheckCountdown > 0) {
       const interval = setInterval(() => {
         setSafetyCheckCountdown(prev => {
           if (prev <= 1) {
@@ -215,7 +218,7 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
 
       return () => clearInterval(interval);
     }
-  }, [showSafetyCheck, safetyCheckCountdown]);
+  }, [showSafetyCheckPrompt, safetyCheckCountdown]);
 
   useEffect(() => {
     if (isCheckInPrompt && checkInCountdown > 0) {
@@ -236,9 +239,13 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
 
   const handlePing = async () => {
     try {
+      const contacts = JSON.parse(localStorage.getItem('trustedContacts') || '[]');
+      
       if (currentLocation) {
         const userName = getUserDisplayName();
-        await shareLocationWithContacts(currentLocation, userName);
+        await shareLocationWithContacts(currentLocation, userName, (contactCount) => {
+          showLocationShared(contactCount);
+        });
       } else {
         await shareLocation();
       }
@@ -260,6 +267,7 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
     updateCheckIn();
     setIsCheckInPrompt(false);
     setCheckInCountdown(0);
+    showCheckInSent();
     
     // Update localStorage with new check-in time
     const savedSession = localStorage.getItem('activeSession');
@@ -281,7 +289,7 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
     // Extend session by 5 minutes
     const newEndTime = Date.now() + (5 * 60 * 1000);
     setSessionEndTime(newEndTime);
-    setShowSafetyCheck(false);
+    setShowSafetyCheckPrompt(false);
     setSafetyCheckCountdown(0);
     setIsSessionExpired(false);
 
@@ -292,6 +300,8 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
       sessionData.endTime = newEndTime;
       localStorage.setItem('activeSession', JSON.stringify(sessionData));
     }
+
+    showCheckInSent();
   };
 
   const handleEmergencyAlert = async () => {
@@ -306,31 +316,28 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
       const userName = getUserDisplayName();
       
       if (currentLocation && contacts.length > 0) {
-        await sendEmergencyAlert(contacts, currentLocation, userName);
+        await sendEmergencyAlert(contacts, currentLocation, userName, () => {
+          showEmergencyAlert();
+        });
       }
     } catch (error) {
       console.error('Failed to send emergency alert:', error);
     }
 
-    setShowSafetyCheck(false);
+    setShowSafetyCheckPrompt(false);
     setSafetyCheckCountdown(0);
   };
 
-  const handleGentleAlert = () => {
-    // In a real app, this would send gentle alerts to trusted contacts
-    console.log('🔔 Gentle check-in alert sent to trusted circle');
-    
-    const contacts = JSON.parse(localStorage.getItem('trustedContacts') || '[]');
-    contacts.forEach((contact: any) => {
-      console.log(`Gently checking with ${contact.name}: Haven't heard from our friend in a while`);
-    });
-
-    // Show gentle notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Your circle has been notified', {
-        body: 'We\'ve let them know you might need a gentle check-in',
-        icon: '/Niva Logo 1024x1024.png'
+  const handleGentleAlert = async () => {
+    try {
+      const contacts = JSON.parse(localStorage.getItem('trustedContacts') || '[]');
+      const userName = getUserDisplayName();
+      
+      await sendCheckInAlert(contacts, userName, undefined, () => {
+        showCheckInSent();
       });
+    } catch (error) {
+      console.error('Failed to send gentle alert:', error);
     }
 
     setIsCheckInPrompt(false);
@@ -340,6 +347,7 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
   const handleEndSession = () => {
     localStorage.setItem('lastSessionEnd', Date.now().toString());
     localStorage.removeItem('activeSession');
+    showSessionEnded();
     onEndSession();
   };
 
@@ -434,7 +442,7 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
   return (
     <div className="p-6 pb-28">
       {/* Safety Check Prompt */}
-      {showSafetyCheck && (
+      {showSafetyCheckPrompt && (
         <div className="bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 text-white rounded-3xl p-8 mb-8 shadow-2xl">
           <div className="text-center">
             <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
@@ -457,7 +465,7 @@ const CompanionMode: React.FC<CompanionModeProps> = ({ isActive, onEndSession })
       )}
 
       {/* Check-in Prompt */}
-      {isCheckInPrompt && !showSafetyCheck && (
+      {isCheckInPrompt && !showSafetyCheckPrompt && (
         <div className="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 text-white rounded-3xl p-8 mb-8 shadow-2xl">
           <div className="text-center">
             <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6">

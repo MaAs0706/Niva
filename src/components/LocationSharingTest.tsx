@@ -14,6 +14,7 @@ import {
   Play,
   Monitor
 } from 'lucide-react';
+import { useNotifications } from '../contexts/NotificationContext';
 import { 
   shareLocationWithContacts, 
   sendCheckInAlert, 
@@ -26,6 +27,7 @@ const LocationSharingTest: React.FC = () => {
   const [lastShared, setLastShared] = useState<Date | null>(null);
   const [sharingStatus, setSharingStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [contacts, setContacts] = useState<any[]>([]);
+  const { showLocationShared, showCheckInSent, showEmergencyAlert } = useNotifications();
 
   React.useEffect(() => {
     const savedContacts = localStorage.getItem('trustedContacts');
@@ -65,7 +67,9 @@ const LocationSharingTest: React.FC = () => {
       console.log('==========================================');
       
       // Share location with contacts
-      await shareLocationWithContacts(location, userName);
+      await shareLocationWithContacts(location, userName, (contactCount) => {
+        showLocationShared(contactCount);
+      });
       
       setLastShared(new Date());
       setSharingStatus('success');
@@ -89,8 +93,9 @@ const LocationSharingTest: React.FC = () => {
       const userName = getUserDisplayName();
       console.log('🔔 STARTING CHECK-IN ALERT SIMULATION...');
       console.log('========================================');
-      await sendCheckInAlert(contacts, userName);
-      alert('Gentle check-in alert simulation completed! Check the console for details.');
+      await sendCheckInAlert(contacts, userName, undefined, () => {
+        showCheckInSent();
+      });
     } catch (error) {
       console.error('❌ Check-in alert simulation failed:', error);
       alert('Failed to simulate check-in alert. Please try again.');
@@ -128,9 +133,10 @@ const LocationSharingTest: React.FC = () => {
       const userName = getUserDisplayName();
       console.log('🚨 STARTING EMERGENCY ALERT SIMULATION...');
       console.log('=========================================');
-      await sendEmergencyAlert(contacts, location, userName);
+      await sendEmergencyAlert(contacts, location, userName, () => {
+        showEmergencyAlert();
+      });
       
-      alert('🚨 Emergency alert simulation completed! Check the console for detailed logs.');
     } catch (error) {
       console.error('❌ Emergency alert simulation failed:', error);
       alert('Failed to simulate emergency alert. Please try again.');
@@ -184,6 +190,37 @@ const LocationSharingTest: React.FC = () => {
         </div>
       </div>
 
+      {/* In-App Notifications Notice */}
+      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-800 rounded-3xl p-8 mb-8 transition-colors duration-300">
+        <div className="flex items-center space-x-4 mb-6">
+          <div className="p-3 bg-purple-100 dark:bg-purple-800 rounded-2xl transition-colors duration-300">
+            <CheckCircle className="w-6 h-6 text-purple-600 dark:text-purple-300 transition-colors duration-300" />
+          </div>
+          <div>
+            <h3 className="font-bold text-purple-900 dark:text-purple-100 text-xl transition-colors duration-300">In-App Notifications</h3>
+            <p className="text-purple-700 dark:text-purple-300 transition-colors duration-300">Beautiful toast notifications show when actions complete</p>
+          </div>
+        </div>
+        
+        <div className="bg-purple-100 dark:bg-purple-800/50 rounded-2xl p-6 transition-colors duration-300">
+          <h4 className="font-bold text-purple-900 dark:text-purple-100 mb-4 transition-colors duration-300">🎯 What you'll see:</h4>
+          <div className="space-y-3 text-purple-800 dark:text-purple-200 transition-colors duration-300">
+            <div className="flex items-center space-x-3">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <span className="text-sm"><strong>Location Shared:</strong> Confirmation with contact count</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <span className="text-sm"><strong>Check-in Sent:</strong> Gentle notification to your circle</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <span className="text-sm"><strong>Emergency Alert:</strong> Urgent notification sent</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Console Instructions */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-3xl p-8 mb-8 transition-colors duration-300">
         <div className="flex items-center space-x-4 mb-6">
@@ -224,7 +261,7 @@ const LocationSharingTest: React.FC = () => {
       </div>
 
       {/* Contact Status */}
-      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 mb-8 border border-orange-100/50 dark:border-slate-700/50 transition-colors duration-300">
+      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 mb-8 border border-purple-100/50 dark:border-slate-700/50 transition-colors duration-300">
         <div className="flex items-center space-x-4 mb-6">
           <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-2xl transition-colors duration-300">
             <Users className="w-6 h-6 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
@@ -324,7 +361,7 @@ const LocationSharingTest: React.FC = () => {
       {/* Test Actions */}
       <div className="space-y-6">
         {/* Share Location */}
-        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 border border-orange-100/50 dark:border-slate-700/50 transition-colors duration-300">
+        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 border border-purple-100/50 dark:border-slate-700/50 transition-colors duration-300">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-emerald-100 dark:bg-emerald-900/50 rounded-2xl transition-colors duration-300">
@@ -378,7 +415,7 @@ const LocationSharingTest: React.FC = () => {
         </div>
 
         {/* Check-in Alert */}
-        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 border border-orange-100/50 dark:border-slate-700/50 transition-colors duration-300">
+        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 border border-purple-100/50 dark:border-slate-700/50 transition-colors duration-300">
           <div className="flex items-center space-x-4 mb-6">
             <div className="p-3 bg-amber-100 dark:bg-amber-900/50 rounded-2xl transition-colors duration-300">
               <MessageSquare className="w-6 h-6 text-amber-600 dark:text-amber-400 transition-colors duration-300" />
@@ -426,7 +463,7 @@ const LocationSharingTest: React.FC = () => {
       <div className="mt-8 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-3xl p-8 transition-colors duration-300">
         <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-4 text-lg transition-colors duration-300">🎯 Frontend-Only Simulation Mode</h3>
         <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4 transition-colors duration-300">
-          All messaging functionality is simulated with detailed console logging. No backend server or external services required.
+          All messaging functionality is simulated with detailed console logging and beautiful in-app notifications. No backend server or external services required.
         </p>
         <div className="bg-slate-800 dark:bg-slate-900 rounded-2xl p-4 text-green-400 font-mono text-sm">
           <p>💡 Open your browser's developer console (F12) to see detailed message logs!</p>

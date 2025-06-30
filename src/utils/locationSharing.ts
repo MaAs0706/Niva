@@ -110,7 +110,8 @@ export const shareLocationViaSMS = async (
   contacts: Contact[], 
   location: LocationData, 
   userName: string = 'Your friend',
-  sessionData?: SessionData
+  sessionData?: SessionData,
+  showNotification?: (contactCount: number) => void
 ): Promise<void> => {
   console.log('📱 SMS SERVICE - FRONTEND SIMULATION MODE');
   console.log('=========================================');
@@ -144,13 +145,18 @@ export const shareLocationViaSMS = async (
     console.log(`   Relationship: ${contact.relationship}`);
     console.log(`   Status: ✅ SIMULATED DELIVERY`);
     console.log(`   Message ID: SMS_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
-    console.log('   💡 In production: Would send via Twilio/SMS API');
+    console.log(`   💡 In production: Would send via Twilio/SMS API`);
     console.log('');
   }
   
   console.log('🎉 All SMS simulations completed!');
   console.log(`📊 Summary: ${contacts.length} messages would be delivered`);
   console.log('=========================================\n');
+
+  // Show in-app notification
+  if (showNotification) {
+    showNotification(contacts.length);
+  }
 };
 
 /**
@@ -214,7 +220,8 @@ export const shareLocationViaEmail = async (
 export const sendCheckInAlert = async (
   contacts: Contact[], 
   userName: string = 'Your friend',
-  sessionData?: SessionData
+  sessionData?: SessionData,
+  showNotification?: () => void
 ): Promise<void> => {
   console.log('🔔 CHECK-IN ALERT SERVICE - FRONTEND SIMULATION MODE');
   console.log('====================================================');
@@ -240,6 +247,11 @@ export const sendCheckInAlert = async (
   
   console.log('🎉 All check-in alert simulations completed!');
   console.log('====================================================\n');
+
+  // Show in-app notification
+  if (showNotification) {
+    showNotification();
+  }
 };
 
 /**
@@ -248,7 +260,8 @@ export const sendCheckInAlert = async (
 export const sendEmergencyAlert = async (
   contacts: Contact[],
   location: LocationData,
-  userName: string = 'Your friend'
+  userName: string = 'Your friend',
+  showNotification?: () => void
 ): Promise<void> => {
   console.log('🚨 EMERGENCY ALERT SERVICE - FRONTEND SIMULATION MODE');
   console.log('=====================================================');
@@ -289,6 +302,11 @@ export const sendEmergencyAlert = async (
   console.log('📞 In production: Contacts would be notified immediately');
   console.log('🆘 In production: Could also integrate with emergency services');
   console.log('=====================================================\n');
+
+  // Show in-app notification
+  if (showNotification) {
+    showNotification();
+  }
 };
 
 /**
@@ -296,7 +314,8 @@ export const sendEmergencyAlert = async (
  */
 export const shareLocationWithContacts = async (
   location: LocationData, 
-  userName: string = 'Your friend'
+  userName: string = 'Your friend',
+  showNotification?: (contactCount: number) => void
 ): Promise<void> => {
   const contacts: Contact[] = JSON.parse(localStorage.getItem('trustedContacts') || '[]');
   const sessionData: SessionData | undefined = (() => {
@@ -335,7 +354,7 @@ export const shareLocationWithContacts = async (
     console.log('🚀 Starting multi-channel message simulation...\n');
     
     // Primary: SMS
-    await shareLocationViaSMS(contacts, location, userName, sessionData);
+    await shareLocationViaSMS(contacts, location, userName, sessionData, showNotification);
     
     // Secondary: WhatsApp (if available)
     await shareLocationViaWhatsApp(contacts, location, userName, sessionData);
@@ -353,27 +372,8 @@ export const shareLocationWithContacts = async (
     console.log('   💡 Ready for production backend integration!');
     console.log('=========================================\n');
     
-    // Show success notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Location Sharing Simulated! 🛡️', {
-        body: `Location sharing simulated for ${contacts.length} trusted contact${contacts.length !== 1 ? 's' : ''}. Check console for details.`,
-        icon: '/vite.svg',
-        tag: 'location-shared'
-      });
-    }
-    
   } catch (error) {
     console.error('❌ Failed to simulate location sharing:', error);
-    
-    // Show error notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Location Sharing Simulation Issue', {
-        body: `Problem simulating location sharing: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        icon: '/vite.svg',
-        tag: 'location-error'
-      });
-    }
-    
     throw error;
   }
 };

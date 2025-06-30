@@ -13,6 +13,7 @@ import InstallPrompt from './components/InstallPrompt';
 import { SessionProvider } from './contexts/SessionContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 type ActiveView = 'landing' | 'dashboard' | 'companion' | 'contacts' | 'map' | 'routes' | 'settings' | 'test';
 
@@ -348,11 +349,13 @@ const AppContent: React.FC = () => {
 function App() {
   return (
     <ThemeProvider>
-      <SessionProvider>
-        <LocationProvider>
-          <AppContent />
-        </LocationProvider>
-      </SessionProvider>
+      <NotificationProvider>
+        <SessionProvider>
+          <LocationProvider>
+            <AppContent />
+          </LocationProvider>
+        </SessionProvider>
+      </NotificationProvider>
     </ThemeProvider>
   );
 }
