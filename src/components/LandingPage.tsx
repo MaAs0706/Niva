@@ -56,6 +56,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     setShowInstallInfo(true);
   };
 
+  const handleGetStartedClick = () => {
+    console.log('Landing page: Get started clicked');
+    onGetStarted();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-50 to-teal-50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-500">
       {/* Hero Section */}
@@ -106,7 +111,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
               <button
-                onClick={onGetStarted}
+                onClick={handleGetStartedClick}
                 className="group bg-gradient-to-r from-purple-500 via-purple-600 to-teal-500 text-white px-12 py-6 rounded-3xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-4"
               >
                 <span>Begin Your Journey</span>
@@ -240,7 +245,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <button
-              onClick={onGetStarted}
+              onClick={handleGetStartedClick}
               className="group bg-gradient-to-r from-purple-500 via-purple-600 to-teal-500 text-white px-10 py-5 rounded-3xl font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-3"
             >
               <Play className="w-6 h-6" />
@@ -342,7 +347,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                   <button
                     onClick={() => {
                       setShowInstallInfo(false);
-                      onGetStarted();
+                      handleGetStartedClick();
                     }}
                     className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-4 px-6 rounded-2xl font-bold hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-3"
                   >

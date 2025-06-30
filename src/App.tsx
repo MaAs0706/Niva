@@ -21,40 +21,64 @@ const AppContent: React.FC = () => {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [hasSeenLanding, setHasSeenLanding] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check for first-time user and active session on mount
   useEffect(() => {
-    const hasSeenLandingBefore = localStorage.getItem('hasSeenLanding');
-    const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
-    
-    if (!hasSeenLandingBefore) {
-      setActiveView('landing');
-    } else {
-      setHasSeenLanding(true);
-      setActiveView('dashboard');
+    // Add a small delay to ensure proper loading
+    const initializeApp = () => {
+      const hasSeenLandingBefore = localStorage.getItem('hasSeenLanding');
+      const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
       
-      // Show onboarding if they haven't seen it
-      if (!hasCompletedOnboarding) {
-        setShowOnboarding(true);
-      }
-    }
-
-    // Check for active session
-    const savedSession = localStorage.getItem('activeSession');
-    if (savedSession) {
-      const session = JSON.parse(savedSession);
-      if (session.isActive && Date.now() - session.startTime < 24 * 60 * 60 * 1000) {
-        setIsSessionActive(true);
-        if (hasSeenLandingBefore) {
-          setActiveView('companion');
-        }
+      console.log('App initialization:', {
+        hasSeenLandingBefore,
+        hasCompletedOnboarding,
+        currentView: activeView
+      });
+      
+      if (!hasSeenLandingBefore) {
+        // First time user - show landing page
+        setActiveView('landing');
+        setHasSeenLanding(false);
       } else {
-        localStorage.removeItem('activeSession');
+        // Returning user - go to dashboard
+        setHasSeenLanding(true);
+        setActiveView('dashboard');
+        
+        // Show onboarding if they haven't seen it
+        if (!hasCompletedOnboarding) {
+          setShowOnboarding(true);
+        }
       }
-    }
+
+      // Check for active session
+      const savedSession = localStorage.getItem('activeSession');
+      if (savedSession) {
+        try {
+          const session = JSON.parse(savedSession);
+          if (session.isActive && Date.now() - session.startTime < 24 * 60 * 60 * 1000) {
+            setIsSessionActive(true);
+            if (hasSeenLandingBefore) {
+              setActiveView('companion');
+            }
+          } else {
+            localStorage.removeItem('activeSession');
+          }
+        } catch (error) {
+          console.error('Error parsing session data:', error);
+          localStorage.removeItem('activeSession');
+        }
+      }
+      
+      setIsLoading(false);
+    };
+
+    // Small delay to ensure proper initialization
+    setTimeout(initializeApp, 100);
   }, []);
 
   const handleGetStarted = () => {
+    console.log('Get started clicked');
     localStorage.setItem('hasSeenLanding', 'true');
     setHasSeenLanding(true);
     setActiveView('dashboard');
@@ -97,6 +121,24 @@ const AppContent: React.FC = () => {
     localStorage.removeItem('activeSession');
   };
 
+  // Show loading state briefly
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-50 to-teal-50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <img 
+              src="/Niva Logo 1024x1024.png" 
+              alt="Niva Logo" 
+              className="w-12 h-12 rounded-2xl"
+            />
+          </div>
+          <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
   const renderView = () => {
     if (activeView === 'landing') {
       return <LandingPage onGetStarted={handleGetStarted} />;
@@ -125,6 +167,7 @@ const AppContent: React.FC = () => {
     return (
       <div className="min-h-screen">
         {renderView()}
+        <InstallPrompt />
       </div>
     );
   }
