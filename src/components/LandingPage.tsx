@@ -11,7 +11,10 @@ import {
   Route,
   Bell,
   Camera,
-  Settings
+  Settings,
+  Download,
+  Smartphone,
+  Monitor
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -20,6 +23,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   const [currentFeature, setCurrentFeature] = useState(0);
+  const [showInstallInfo, setShowInstallInfo] = useState(false);
 
   const features = [
     {
@@ -47,6 +51,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       color: "from-amber-400 to-orange-500"
     }
   ];
+
+  const handleInstallClick = () => {
+    setShowInstallInfo(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-50 to-teal-50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-500">
@@ -95,13 +103,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               With intelligent monitoring and gentle care, you're never truly alone.
             </p>
 
-            <button
-              onClick={onGetStarted}
-              className="group bg-gradient-to-r from-purple-500 via-purple-600 to-teal-500 text-white px-12 py-6 rounded-3xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-4 mx-auto"
-            >
-              <span>Begin Your Journey</span>
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
+              <button
+                onClick={onGetStarted}
+                className="group bg-gradient-to-r from-purple-500 via-purple-600 to-teal-500 text-white px-12 py-6 rounded-3xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-4"
+              >
+                <span>Begin Your Journey</span>
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" />
+              </button>
+
+              <button
+                onClick={handleInstallClick}
+                className="group bg-white/90 dark:bg-slate-800/90 text-purple-600 dark:text-purple-400 px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-3 border border-purple-200 dark:border-purple-700"
+              >
+                <Download className="w-5 h-5" />
+                <span>Download App</span>
+              </button>
+            </div>
+
+            {/* Download Benefits */}
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-600 dark:text-slate-300">
+              <div className="flex items-center space-x-2">
+                <Monitor className="w-4 h-4 text-emerald-500" />
+                <span>Works offline</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Smartphone className="w-4 h-4 text-blue-500" />
+                <span>Native app experience</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Download className="w-4 h-4 text-purple-500" />
+                <span>Quick home screen access</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -239,6 +274,87 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </p>
         </div>
       </div>
+
+      {/* Install Info Modal */}
+      {showInstallInfo && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-md w-full transition-colors duration-300">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-2xl">
+                    <Download className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-xl">Download Niva</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">Install for the best experience</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowInstallInfo(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
+                >
+                  <ArrowRight className="w-5 h-5 rotate-45" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-800 rounded-2xl p-6">
+                  <h4 className="font-bold text-purple-900 dark:text-purple-100 mb-4">📱 How to Install</h4>
+                  <div className="space-y-3 text-purple-800 dark:text-purple-200 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                      <span><strong>Chrome/Edge:</strong> Look for "Install" button in address bar</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                      <span><strong>iPhone:</strong> Tap Share → "Add to Home Screen"</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                      <span><strong>Android:</strong> Tap menu → "Install app"</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                      <Monitor className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">Works Offline</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                      <Smartphone className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">Native Feel</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                      <Download className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">Quick Access</p>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <button
+                    onClick={() => {
+                      setShowInstallInfo(false);
+                      onGetStarted();
+                    }}
+                    className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-4 px-6 rounded-2xl font-bold hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-3"
+                  >
+                    <Play className="w-5 h-5" />
+                    <span>Continue to App</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
