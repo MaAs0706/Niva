@@ -18,38 +18,34 @@ import { NotificationProvider } from './contexts/NotificationContext';
 type ActiveView = 'landing' | 'dashboard' | 'companion' | 'contacts' | 'map' | 'routes' | 'settings' | 'test';
 
 const AppContent: React.FC = () => {
-  const [activeView, setActiveView] = useState<ActiveView>('landing');
+  const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [hasSeenLanding, setHasSeenLanding] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Check for first-time user and active session on mount
   useEffect(() => {
-    // Add a small delay to ensure proper loading
     const initializeApp = () => {
-      const hasSeenLandingBefore = localStorage.getItem('hasSeenLanding');
+      // Check if this is the user's first time
+      const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
       const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
       
       console.log('App initialization:', {
-        hasSeenLandingBefore,
-        hasCompletedOnboarding,
-        currentView: activeView
+        hasVisitedBefore,
+        hasCompletedOnboarding
       });
       
-      if (!hasSeenLandingBefore) {
+      if (!hasVisitedBefore) {
         // First time user - show landing page
+        console.log('First time user detected - showing landing page');
+        setIsFirstTimeUser(true);
         setActiveView('landing');
-        setHasSeenLanding(false);
       } else {
-        // Returning user - go to dashboard
-        setHasSeenLanding(true);
+        // Returning user - go straight to dashboard
+        console.log('Returning user - going to dashboard');
+        setIsFirstTimeUser(false);
         setActiveView('dashboard');
-        
-        // Show onboarding if they haven't seen it
-        if (!hasCompletedOnboarding) {
-          setShowOnboarding(true);
-        }
       }
 
       // Check for active session
@@ -59,7 +55,8 @@ const AppContent: React.FC = () => {
           const session = JSON.parse(savedSession);
           if (session.isActive && Date.now() - session.startTime < 24 * 60 * 60 * 1000) {
             setIsSessionActive(true);
-            if (hasSeenLandingBefore) {
+            // Only switch to companion view if not a first-time user
+            if (hasVisitedBefore) {
               setActiveView('companion');
             }
           } else {
@@ -79,24 +76,30 @@ const AppContent: React.FC = () => {
   }, []);
 
   const handleGetStarted = () => {
-    console.log('Get started clicked');
-    localStorage.setItem('hasSeenLanding', 'true');
-    setHasSeenLanding(true);
+    console.log('Get started clicked - marking user as visited');
+    
+    // Mark that user has visited the app
+    localStorage.setItem('hasVisitedBefore', 'true');
+    
+    setIsFirstTimeUser(false);
     setActiveView('dashboard');
     
-    // Show onboarding for new users
+    // Show onboarding tour for new users
     const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
     if (!hasCompletedOnboarding) {
+      console.log('Starting onboarding tour');
       setShowOnboarding(true);
     }
   };
 
   const handleOnboardingComplete = () => {
+    console.log('Onboarding completed');
     localStorage.setItem('hasCompletedOnboarding', 'true');
     setShowOnboarding(false);
   };
 
   const handleOnboardingSkip = () => {
+    console.log('Onboarding skipped');
     localStorage.setItem('hasCompletedOnboarding', 'true');
     setShowOnboarding(false);
   };
@@ -141,10 +144,12 @@ const AppContent: React.FC = () => {
   }
 
   const renderView = () => {
-    if (activeView === 'landing') {
+    // First time users see the landing page
+    if (isFirstTimeUser && activeView === 'landing') {
       return <LandingPage onGetStarted={handleGetStarted} />;
     }
 
+    // Regular app views for returning users or after onboarding
     switch (activeView) {
       case 'companion':
         return <CompanionMode isActive={isSessionActive} onEndSession={handleEndSession} />;
@@ -163,8 +168,8 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // Show landing page without navigation
-  if (activeView === 'landing') {
+  // Show landing page without navigation for first-time users
+  if (isFirstTimeUser && activeView === 'landing') {
     return (
       <div className="min-h-screen">
         {renderView()}
@@ -173,6 +178,7 @@ const AppContent: React.FC = () => {
     );
   }
 
+  // Regular app layout for returning users
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-50 to-teal-50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-500">
       {/* Enhanced Header */}
@@ -335,8 +341,8 @@ const AppContent: React.FC = () => {
         </div>
       </nav>
 
-      {/* Onboarding Tour */}
-      {showOnboarding && hasSeenLanding && (
+      {/* Onboarding Tour - Only for first-time users after they click "Get Started" */}
+      {showOnboarding && !isFirstTimeUser && (
         <OnboardingTour
           onComplete={handleOnboardingComplete}
           onSkip={handleOnboardingSkip}
