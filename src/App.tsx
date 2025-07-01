@@ -10,10 +10,12 @@ import LocationSharingTest from './components/LocationSharingTest';
 import LandingPage from './components/LandingPage';
 import OnboardingTour from './components/OnboardingTour';
 import InstallPrompt from './components/InstallPrompt';
+import OfflineIndicator from './components/OfflineIndicator';
 import { SessionProvider } from './contexts/SessionContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { OfflineProvider } from './contexts/OfflineContext';
 
 type ActiveView = 'landing' | 'dashboard' | 'companion' | 'contacts' | 'map' | 'routes' | 'settings' | 'test';
 
@@ -174,6 +176,7 @@ const AppContent: React.FC = () => {
       <div className="min-h-screen">
         {renderView()}
         <InstallPrompt />
+        <OfflineIndicator />
       </div>
     );
   }
@@ -241,6 +244,9 @@ const AppContent: React.FC = () => {
         {/* Bottom border with gradient */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-300/50 to-transparent dark:via-purple-700/50"></div>
       </header>
+
+      {/* Offline Indicator */}
+      <OfflineIndicator />
 
       {/* Main Content */}
       <main className="max-w-md mx-auto">
@@ -356,11 +362,13 @@ function App() {
   return (
     <ThemeProvider>
       <NotificationProvider>
-        <SessionProvider>
-          <LocationProvider>
-            <AppContent />
-          </LocationProvider>
-        </SessionProvider>
+        <OfflineProvider>
+          <SessionProvider>
+            <LocationProvider>
+              <AppContent />
+            </LocationProvider>
+          </SessionProvider>
+        </OfflineProvider>
       </NotificationProvider>
     </ThemeProvider>
   );

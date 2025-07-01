@@ -9,6 +9,9 @@
   "orientation": "portrait-primary",
   "categories": ["safety", "lifestyle", "utilities"],
   "prefer_related_applications": false,
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/Niva Logo 1024x1024.png",
@@ -60,6 +63,40 @@
       "type": "image/png",
       "form_factor": "wide",
       "label": "Niva Safety Companion"
+    }
+  ],
+  "features": [
+    "Cross Platform",
+    "fast",
+    "simple"
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "shortcuts": [
+    {
+      "name": "Start Session",
+      "short_name": "Start",
+      "description": "Start a new safety companion session",
+      "url": "/?action=start-session",
+      "icons": [
+        {
+          "src": "/Niva Logo 1024x1024.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Emergency",
+      "short_name": "Emergency",
+      "description": "Quick access to emergency features",
+      "url": "/?action=emergency",
+      "icons": [
+        {
+          "src": "/Niva Logo 1024x1024.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
