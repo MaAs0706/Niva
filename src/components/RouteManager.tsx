@@ -15,7 +15,9 @@ import {
   Heart,
   Star,
   ArrowRight,
-  X
+  X,
+  Save,
+  CheckCircle
 } from 'lucide-react';
 import MapView from './MapView';
 
@@ -46,6 +48,8 @@ const RouteManager: React.FC = () => {
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [showLocationForm, setShowLocationForm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [locationFormData, setLocationFormData] = useState({
     name: '',
     estimatedTime: 5
@@ -61,12 +65,22 @@ const RouteManager: React.FC = () => {
   useEffect(() => {
     const savedRoutes = localStorage.getItem('savedRoutes');
     if (savedRoutes) {
-      setRoutes(JSON.parse(savedRoutes));
+      try {
+        const parsed = JSON.parse(savedRoutes);
+        setRoutes(Array.isArray(parsed) ? parsed : []);
+      } catch (error) {
+        console.error('Error parsing saved routes:', error);
+        setRoutes([]);
+      }
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('savedRoutes', JSON.stringify(routes));
+    try {
+      localStorage.setItem('savedRoutes', JSON.stringify(routes));
+    } catch (error) {
+      console.error('Error saving routes to localStorage:', error);
+    }
   }, [routes]);
 
   const routeTypeIcons = {
@@ -85,36 +99,71 @@ const RouteManager: React.FC = () => {
     other: 'from-slate-500 to-slate-600'
   };
 
-  const handleCreateRoute = () => {
-    if (!newRoute.name || !newRoute.waypoints || newRoute.waypoints.length < 2) {
-      alert('Please add a route name and at least 2 locations (start and destination)');
+  const handleCreateRoute = async () => {
+    if (!newRoute.name?.trim()) {
+      alert('Please add a route name');
+      return;
+    }
+    
+    if (!newRoute.waypoints || newRoute.waypoints.length < 2) {
+      alert('Please add at least 2 locations (start and destination)');
       return;
     }
 
-    const totalTime = newRoute.waypoints.reduce((sum, wp) => sum + wp.estimatedTime, 0);
-    
-    const route: SavedRoute = {
-      id: Date.now().toString(),
-      name: newRoute.name,
-      description: newRoute.description || '',
-      type: newRoute.type || 'other',
-      waypoints: newRoute.waypoints,
-      totalTime,
-      createdAt: Date.now(),
-    };
+    setIsSaving(true);
 
-    setRoutes([...routes, route]);
-    setNewRoute({ name: '', description: '', type: 'work', waypoints: [] });
-    setIsCreating(false);
-    setShowMap(false);
-    setSelectedLocation(null);
-    setShowLocationForm(false);
-    setLocationFormData({ name: '', estimatedTime: 5 });
+    try {
+      // Simulate saving process
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const totalTime = newRoute.waypoints.reduce((sum, wp) => sum + wp.estimatedTime, 0);
+      
+      const route: SavedRoute = {
+        id: editingRoute || Date.now().toString(),
+        name: newRoute.name.trim(),
+        description: newRoute.description?.trim() || '',
+        type: newRoute.type || 'other',
+        waypoints: newRoute.waypoints,
+        totalTime,
+        createdAt: editingRoute ? routes.find(r => r.id === editingRoute)?.createdAt || Date.now() : Date.now(),
+      };
+
+      let updatedRoutes;
+      if (editingRoute) {
+        updatedRoutes = routes.map(r => r.id === editingRoute ? route : r);
+      } else {
+        updatedRoutes = [...routes, route];
+      }
+
+      setRoutes(updatedRoutes);
+      
+      // Show success
+      setSaveSuccess(true);
+      
+      // Reset form after success animation
+      setTimeout(() => {
+        setNewRoute({ name: '', description: '', type: 'work', waypoints: [] });
+        setIsCreating(false);
+        setEditingRoute(null);
+        setShowMap(false);
+        setSelectedLocation(null);
+        setShowLocationForm(false);
+        setLocationFormData({ name: '', estimatedTime: 5 });
+        setSaveSuccess(false);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error saving route:', error);
+      alert('Failed to save route. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDeleteRoute = (id: string) => {
     if (confirm('Delete this route?')) {
-      setRoutes(routes.filter(r => r.id !== id));
+      const updatedRoutes = routes.filter(r => r.id !== id);
+      setRoutes(updatedRoutes);
     }
   };
 
@@ -257,12 +306,37 @@ const RouteManager: React.FC = () => {
     return totalPoints >= 2;
   };
 
+  const handleCancelCreate = () => {
+    setIsCreating(false);
+    setEditingRoute(null);
+    setNewRoute({ name: '', description: '', type: 'work', waypoints: [] });
+    setShowMap(false);
+    setSelectedLocation(null);
+    setShowLocationForm(false);
+    setLocationFormData({ name: '', estimatedTime: 5 });
+    setSaveSuccess(false);
+  };
+
   return (
     <div className="p-6 pb-28">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-slate-800 mb-4">Your Routes</h2>
-        <p className="text-slate-600 leading-relaxed text-lg">Save your regular journeys for quick companion sessions</p>
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4 transition-colors duration-300">Your Routes</h2>
+        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-lg transition-colors duration-300">Save your regular journeys for quick companion sessions</p>
       </div>
+
+      {/* Success Modal */}
+      {saveSuccess && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Route Saved! ✨</h3>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">Your route has been successfully saved and is ready to use.</p>
+            <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          </div>
+        </div>
+      )}
 
       {/* Create Route Button */}
       {!isCreating && (
@@ -280,29 +354,31 @@ const RouteManager: React.FC = () => {
 
       {/* Create Route Form */}
       {isCreating && (
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 mb-8 border border-orange-100/50">
-          <h3 className="font-bold text-slate-800 mb-8 text-2xl">Create New Route</h3>
+        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 mb-8 border border-orange-100/50 dark:border-slate-700/50 transition-colors duration-300">
+          <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-8 text-2xl transition-colors duration-300">
+            {editingRoute ? 'Edit Route' : 'Create New Route'}
+          </h3>
           
           <div className="space-y-6">
             <input
               type="text"
               value={newRoute.name || ''}
               onChange={(e) => setNewRoute({ ...newRoute, name: e.target.value })}
-              className="w-full px-6 py-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-medium text-lg"
+              className="w-full px-6 py-4 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-medium text-lg transition-colors duration-300"
               placeholder="Route name (e.g., 'Work to Home')"
             />
 
             <textarea
               value={newRoute.description || ''}
               onChange={(e) => setNewRoute({ ...newRoute, description: e.target.value })}
-              className="w-full px-6 py-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-6 py-4 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-300"
               placeholder="Description (optional)"
               rows={3}
             />
 
             {/* Route Type Selection */}
             <div>
-              <label className="block text-lg font-bold text-slate-700 mb-4">Route Type</label>
+              <label className="block text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 transition-colors duration-300">Route Type</label>
               <div className="grid grid-cols-2 gap-4">
                 {Object.entries(routeTypeIcons).map(([type, Icon]) => (
                   <button
@@ -311,7 +387,7 @@ const RouteManager: React.FC = () => {
                     className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
                       newRoute.type === type
                         ? `border-indigo-500 bg-gradient-to-br ${routeTypeColors[type as keyof typeof routeTypeColors]} text-white shadow-lg`
-                        : 'border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50'
+                        : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
                     }`}
                   >
                     <Icon className="w-8 h-8 mx-auto mb-3" />
@@ -323,8 +399,8 @@ const RouteManager: React.FC = () => {
 
             {/* Map Section - Always visible when creating */}
             <div>
-              <h4 className="text-lg font-bold text-slate-800 mb-4">Select Route Points</h4>
-              <p className="text-slate-600 mb-6">Tap anywhere on the map to add locations. Routes will be drawn automatically!</p>
+              <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 transition-colors duration-300">Select Route Points</h4>
+              <p className="text-slate-600 dark:text-slate-300 mb-6 transition-colors duration-300">Tap anywhere on the map to add locations. Routes will be drawn automatically!</p>
               
               <div className="mb-6">
                 <MapView
@@ -339,27 +415,27 @@ const RouteManager: React.FC = () => {
 
               {/* Location Selection Form - Shows when a location is selected */}
               {showLocationForm && selectedLocation && (
-                <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
+                <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl transition-colors duration-300">
                   <div className="flex items-center justify-between mb-4">
-                    <h5 className="font-bold text-blue-900 flex items-center space-x-2">
+                    <h5 className="font-bold text-blue-900 dark:text-blue-100 flex items-center space-x-2 transition-colors duration-300">
                       <MapPin className="w-5 h-5" />
                       <span>Add This Location</span>
                     </h5>
                     <button
                       onClick={cancelLocationSelection}
-                      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-xl transition-colors"
+                      className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-xl transition-colors duration-300"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
                   
                   <div className="space-y-4">
-                    <div className="bg-blue-100 rounded-xl p-4">
-                      <p className="text-sm text-blue-700 font-medium">
+                    <div className="bg-blue-100 dark:bg-blue-800/50 rounded-xl p-4 transition-colors duration-300">
+                      <p className="text-sm text-blue-700 dark:text-blue-200 font-medium transition-colors duration-300">
                         📍 Selected coordinates: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
                       </p>
                       {newRoute.waypoints && newRoute.waypoints.length > 0 && (
-                        <p className="text-xs text-blue-600 mt-2">
+                        <p className="text-xs text-blue-600 dark:text-blue-300 mt-2 transition-colors duration-300">
                           🗺️ Route will be drawn from your current location through all points
                         </p>
                       )}
@@ -369,20 +445,20 @@ const RouteManager: React.FC = () => {
                       type="text"
                       value={locationFormData.name}
                       onChange={(e) => setLocationFormData({ ...locationFormData, name: e.target.value })}
-                      className="w-full px-4 py-3 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-blue-200 dark:border-blue-700 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300"
                       placeholder="What do you call this place? (e.g., 'Home', 'Office', 'Coffee Shop')"
                       autoFocus
                     />
                     
                     <div>
-                      <label className="block text-sm font-medium text-blue-700 mb-2">
+                      <label className="block text-sm font-medium text-blue-700 dark:text-blue-200 mb-2 transition-colors duration-300">
                         Time spent here (minutes)
                       </label>
                       <input
                         type="number"
                         value={locationFormData.estimatedTime}
                         onChange={(e) => setLocationFormData({ ...locationFormData, estimatedTime: parseInt(e.target.value) || 5 })}
-                        className="w-full px-4 py-3 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-blue-200 dark:border-blue-700 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300"
                         min="1"
                         max="120"
                       />
@@ -392,13 +468,13 @@ const RouteManager: React.FC = () => {
                       <button
                         onClick={addLocationToRoute}
                         disabled={!locationFormData.name.trim()}
-                        className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
                       >
                         Add to Route
                       </button>
                       <button
                         onClick={cancelLocationSelection}
-                        className="flex-1 bg-slate-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-600 transition-colors"
+                        className="flex-1 bg-slate-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-600 transition-colors duration-300"
                       >
                         Cancel
                       </button>
@@ -409,39 +485,39 @@ const RouteManager: React.FC = () => {
 
               {/* Waypoints List */}
               <div className="space-y-4">
-                <h5 className="font-bold text-slate-800 text-lg">Route Points ({newRoute.waypoints?.length || 0})</h5>
+                <h5 className="font-bold text-slate-800 dark:text-slate-100 text-lg transition-colors duration-300">Route Points ({newRoute.waypoints?.length || 0})</h5>
                 
                 {newRoute.waypoints?.map((waypoint, index) => (
-                  <div key={waypoint.id} className="flex items-center space-x-4 p-4 bg-slate-50 rounded-2xl">
+                  <div key={waypoint.id} className="flex items-center space-x-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-2xl transition-colors duration-300">
                     <div className={`p-3 rounded-2xl ${
-                      waypoint.type === 'start' ? 'bg-green-100' : 
-                      waypoint.type === 'destination' ? 'bg-red-100' : 'bg-blue-100'
-                    }`}>
+                      waypoint.type === 'start' ? 'bg-green-100 dark:bg-green-900/50' : 
+                      waypoint.type === 'destination' ? 'bg-red-100 dark:bg-red-900/50' : 'bg-blue-100 dark:bg-blue-900/50'
+                    } transition-colors duration-300`}>
                       {waypoint.type === 'start' ? (
-                        <Navigation className="w-5 h-5 text-green-600" />
+                        <Navigation className="w-5 h-5 text-green-600 dark:text-green-400 transition-colors duration-300" />
                       ) : waypoint.type === 'destination' ? (
-                        <MapPin className="w-5 h-5 text-red-600" />
+                        <MapPin className="w-5 h-5 text-red-600 dark:text-red-400 transition-colors duration-300" />
                       ) : (
-                        <MapPin className="w-5 h-5 text-blue-600" />
+                        <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
                       )}
                     </div>
                     <div className="flex-1">
-                      <h6 className="font-bold text-slate-800">{waypoint.name}</h6>
-                      <p className="text-sm text-slate-600">
+                      <h6 className="font-bold text-slate-800 dark:text-slate-100 transition-colors duration-300">{waypoint.name}</h6>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 transition-colors duration-300">
                         {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)} • {waypoint.estimatedTime}min
                       </p>
                       <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        waypoint.type === 'start' ? 'bg-green-100 text-green-700' :
-                        waypoint.type === 'destination' ? 'bg-red-100 text-red-700' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>
+                        waypoint.type === 'start' ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300' :
+                        waypoint.type === 'destination' ? 'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300' :
+                        'bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300'
+                      } transition-colors duration-300`}>
                         {waypoint.type === 'start' ? 'Start Point' : 
                          waypoint.type === 'destination' ? 'Destination' : 'Stop'}
                       </span>
                     </div>
                     <button
                       onClick={() => removeWaypoint(waypoint.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+                      className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -449,8 +525,8 @@ const RouteManager: React.FC = () => {
                 ))}
                 
                 {(!newRoute.waypoints || newRoute.waypoints.length === 0) && (
-                  <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-2xl">
-                    <MapPin className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                  <div className="text-center py-8 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-2xl transition-colors duration-300">
+                    <MapPin className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-500 transition-colors duration-300" />
                     <p className="font-medium text-lg">No route points added yet</p>
                     <p className="text-sm">Tap anywhere on the map above to add your first location</p>
                   </div>
@@ -461,23 +537,28 @@ const RouteManager: React.FC = () => {
             <div className="flex space-x-4">
               <button
                 onClick={handleCreateRoute}
-                disabled={!newRoute.name || !newRoute.waypoints || newRoute.waypoints.length < 2}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-4 px-6 rounded-2xl font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                disabled={!newRoute.name?.trim() || !newRoute.waypoints || newRoute.waypoints.length < 2 || isSaving}
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-4 px-6 rounded-2xl font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2"
               >
-                Save Route
+                {isSaving ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Saving Route...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" />
+                    <span>{editingRoute ? 'Update Route' : 'Save Route'}</span>
+                  </>
+                )}
               </button>
               <button
-                onClick={() => {
-                  setIsCreating(false);
-                  setNewRoute({ name: '', description: '', type: 'work', waypoints: [] });
-                  setShowMap(false);
-                  setSelectedLocation(null);
-                  setShowLocationForm(false);
-                  setLocationFormData({ name: '', estimatedTime: 5 });
-                }}
-                className="flex-1 bg-gradient-to-r from-slate-500 to-slate-600 text-white py-4 px-6 rounded-2xl font-bold hover:shadow-lg transition-all duration-200"
+                onClick={handleCancelCreate}
+                disabled={isSaving}
+                className="flex-1 bg-gradient-to-r from-slate-500 to-slate-600 text-white py-4 px-6 rounded-2xl font-bold hover:shadow-lg disabled:opacity-50 transition-all duration-200 flex items-center justify-center space-x-2"
               >
-                Cancel
+                <X className="w-5 h-5" />
+                <span>Cancel</span>
               </button>
             </div>
           </div>
@@ -488,28 +569,28 @@ const RouteManager: React.FC = () => {
       <div className="space-y-6">
         {routes.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Route className="w-8 h-8 text-purple-400" />
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6 transition-colors duration-300">
+              <Route className="w-8 h-8 text-purple-400 dark:text-purple-500 transition-colors duration-300" />
             </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-3">No routes yet</h3>
-            <p className="text-slate-600 leading-relaxed">Create your first route to get started with quick companion sessions</p>
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-3 transition-colors duration-300">No routes yet</h3>
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed transition-colors duration-300">Create your first route to get started with quick companion sessions</p>
           </div>
         ) : (
           routes.map((route) => {
             const Icon = routeTypeIcons[route.type];
             return (
-              <div key={route.id} className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 border border-orange-100/50">
+              <div key={route.id} className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-lg p-8 border border-orange-100/50 dark:border-slate-700/50 transition-colors duration-300">
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center space-x-4">
                     <div className={`p-4 rounded-2xl bg-gradient-to-br ${routeTypeColors[route.type]} text-white shadow-lg`}>
                       <Icon className="w-8 h-8" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-800">{route.name}</h3>
+                      <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 transition-colors duration-300">{route.name}</h3>
                       {route.description && (
-                        <p className="text-slate-600 mt-1">{route.description}</p>
+                        <p className="text-slate-600 dark:text-slate-300 mt-1 transition-colors duration-300">{route.description}</p>
                       )}
-                      <div className="flex items-center space-x-4 mt-2 text-sm text-slate-500">
+                      <div className="flex items-center space-x-4 mt-2 text-sm text-slate-500 dark:text-slate-400 transition-colors duration-300">
                         <span className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
                           <span>{formatTime(route.totalTime)}</span>
@@ -523,7 +604,7 @@ const RouteManager: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleDeleteRoute(route.id)}
-                    className="p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all duration-200"
+                    className="p-3 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all duration-200"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -539,10 +620,10 @@ const RouteManager: React.FC = () => {
                             waypoint.type === 'start' ? 'bg-green-500' : 
                             waypoint.type === 'destination' ? 'bg-red-500' : 'bg-blue-500'
                           }`}></div>
-                          <p className="text-xs text-slate-600 mt-1 max-w-20 truncate">{waypoint.name}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-20 truncate transition-colors duration-300">{waypoint.name}</p>
                         </div>
                         {index < route.waypoints.length - 1 && (
-                          <ArrowRight className="flex-shrink-0 w-4 h-4 text-slate-400" />
+                          <ArrowRight className="flex-shrink-0 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors duration-300" />
                         )}
                       </React.Fragment>
                     ))}
@@ -558,7 +639,7 @@ const RouteManager: React.FC = () => {
                 </button>
 
                 {route.lastUsed && (
-                  <p className="text-center text-sm text-slate-500 mt-3">
+                  <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-3 transition-colors duration-300">
                     Last used: {new Date(route.lastUsed).toLocaleDateString()}
                   </p>
                 )}
