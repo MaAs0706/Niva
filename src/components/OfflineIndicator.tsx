@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wifi, WifiOff, Cloud, CloudOff, Download, Sync } from 'lucide-react';
+import { Wifi, WifiOff, Cloud, CloudOff, Download, RefreshCw } from 'lucide-react';
 import { useOffline } from '../contexts/OfflineContext';
 
 const OfflineIndicator: React.FC = () => {
@@ -59,7 +59,7 @@ const OfflineIndicator: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
                   <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center">
-                    <Sync className="w-5 h-5 text-white animate-spin" />
+                    <RefreshCw className="w-5 h-5 text-white animate-spin" />
                   </div>
                 </div>
                 
